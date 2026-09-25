@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZapPromo — Automação de Ofertas para Afiliados</title>
+<style>
+:root{
+  --bg:#0b0f17; --bg2:#111826; --card:#151d2c; --card2:#1a2436;
+  --accent:#22e07a; --accent2:#12b45c; --text:#eef2f7; --muted:#8c9bb3;
+  --danger:#ff5d6c; --border:#22304a; --radius:14px;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f4f6fb; --bg2:#ffffff; --card:#ffffff; --card2:#f0f3f9;
+    --text:#141a24; --muted:#5b6b83; --border:#e2e8f2;
+  }
+}
+:root[data-theme="dark"]{ --bg:#0b0f17; --bg2:#111826; --card:#151d2c; --text:#eef2f7; }
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+header.top{
+  position:sticky; top:0; z-index:10; padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  background:linear-gradient(180deg,var(--bg2),rgba(17,24,38,.92));
+  border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;
+  backdrop-filter:blur(8px);
+}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;letter-spacing:-.3px;}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);}
+.spacer{flex:1;}
+.pill-btn{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:999px;font-size:13px;cursor:pointer;}
+main{flex:1;padding:16px;padding-bottom:90px;}
+.screen{display:none;} .screen.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* Landing */
+.hero{padding:28px 4px 10px;text-align:center;}
+.hero h1{font-size:26px;line-height:1.15;margin:0 0 10px;letter-spacing:-.5px;}
+.hero h1 span{color:var(--accent);}
+.hero p{color:var(--muted);font-size:14.5px;margin:0 0 20px;}
+.badge-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.badge{background:var(--card2);border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted);}
+.cta{
+  display:block;width:100%;text-align:center;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#052b16;font-weight:800;padding:15px;border-radius:12px;border:none;font-size:15.5px;cursor:pointer;
+  box-shadow:0 8px 24px -8px rgba(34,224,122,.5);
+}
+.cta.secondary{background:var(--card2);color:var(--text);box-shadow:none;border:1px solid var(--border);}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0;}
+.feature{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.feature .ic{font-size:20px;margin-bottom:6px;}
+.feature h3{margin:0 0 4px;font-size:13.5px;}
+.feature p{margin:0;color:var(--muted);font-size:12px;line-height:1.4;}
+.steps{margin:24px 0;}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.step div h4{margin:0 0 2px;font-size:14px;} .step div p{margin:0;color:var(--muted);font-size:12.5px;}
+
+/* Card generic */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.card h2{margin:0 0 4px;font-size:16px;}
+.card .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px;}
+label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 5px;}
+input,select,textarea{
+  width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+  padding:11px 12px;border-radius:10px;font-size:14.5px;font-family:inherit;
+}
+textarea{resize:vertical;min-height:70px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.err{color:var(--danger);font-size:12.5px;margin-top:6px;display:none;}
+
+/* Dashboard */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.stat .v{font-size:22px;font-weight:800;} .stat .l{color:var(--muted);font-size:11.5px;margin-top:2px;}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px;}
+.section-title h3{margin:0;font-size:14.5px;}
+.link-btn{background:none;border:none;color:var(--accent);font-size:12.5px;cursor:pointer;font-weight:600;}
+.offer{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;display:flex;gap:10px;}
+.offer .thumb{width:56px;height:56px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.offer .info{flex:1;min-width:0;}
+.offer .info h4{margin:0 0 3px;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.offer .info .price{font-size:14px;font-weight:800;color:var(--accent);}
+.offer .info .old{color:var(--muted);text-decoration:line-through;font-size:12px;margin-left:6px;}
+.offer .meta{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.tag{font-size:10.5px;background:var(--card2);border:1px solid var(--border);padding:2px 7px;border-radius:999px;color:var(--muted);}
+.tag.live{color:var(--accent);border-color:var(--accent);}
+.offer .actions{display:flex;flex-direction:column;gap:6px;}
+.icon-btn{background:var(--card2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;}
+.icon-btn.danger{color:var(--danger);}
+
+.empty{text-align:center;padding:34px 10px;color:var(--muted);}
+.empty .ic{font-size:32px;margin-bottom:8px;}
+
+/* Bottom nav */
+nav.bottom{
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+  padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(0deg,var(--bg2),rgba(17,24,38,.92));
+  border-top:1px solid var(--border); backdrop-filter:blur(8px);
+}
+nav.bottom .inner{max-width:480px;margin:0 auto;display:flex;justify-content:space-around;}
+nav.bottom button{background:none;border:none;color:var(--muted);font-size:10.5px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 10px;}
+nav.bottom button .ic{font-size:19px;}
+nav.bottom button.active{color:var(--accent);}
+nav.hidden{display:none;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+.overlay.show{display:flex;}
+.sheet{background:var(--bg2);border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--border);}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.sheet h3{margin:0 0 14px;font-size:16.5px;}
+.close-x{position:absolute;top:14px;right:16px;background:var(--card2);border:1px solid var(--border);width:30px;height:30px;border-radius:50%;color:var(--text);font-size:15px;cursor:pointer;}
+.sheet-wrap{position:relative;}
+.chip-select{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.chip{padding:8px 13px;border-radius:999px;border:1px solid var(--border);background:var(--card2);font-size:13px;cursor:pointer;}
+.chip.sel{background:var(--accent);color:#052b16;border-color:var(--accent);font-weight:700;}
+.preview-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px;}
+.preview-card .pv-img{height:110px;border-radius:8px;background:linear-gradient(135deg,#2a3550,#1a2436);display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:8px;}
+.preview-card .pv-title{font-weight:700;font-size:13.5px;margin-bottom:4px;}
+.preview-card .pv-price{color:var(--accent);font-weight:800;font-size:16px;}
+.preview-card .pv-old{color:var(--muted);text-decoration:line-through;font-size:12px;margin-left:6px;}
+.preview-card .pv-desc{color:var(--muted);font-size:12px;margin-top:6px;white-space:pre-wrap;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:13px;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;}
+.toast.show{opacity:1;}
+.plan{border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;background:var(--card2);}
+.plan.sel{border-color:var(--accent);background:rgba(34,224,122,.08);}
+.plan .ptitle{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:14.5px;}
+.plan .pprice{color:var(--accent);}
+.plan .pdesc{color:var(--muted);font-size:12px;margin-top:4px;}
+.admin-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.admin-row:last-child{border-bottom:none;}
+.small-muted{color:var(--muted);font-size:11.5px;}
+.footer-note{text-align:center;color:var(--muted);font-size:11px;margin:20px 0 6px;}
+.product-strip{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
+.pimg{width:52px;height:52px;border-radius:12px;}
+.feat-img{width:100%;max-width:60px;border-radius:10px;margin-bottom:8px;}
+.lock-banner{background:linear-gradient(135deg,#2a2210,#1a2436);border:1px solid #4a3a12;border-radius:var(--radius);padding:14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;}
+.lock-banner .ic{font-size:22px;}
+.lock-banner div p{margin:0;font-size:12.5px;color:var(--muted);}
+.lock-banner div h4{margin:0 0 2px;font-size:13.5px;}
+.disabled-wrap{opacity:.45;pointer-events:none;filter:grayscale(.4);}
+.pix-box{background:var(--card2);border:1px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;margin:12px 0;}
+.pix-box .key{font-family:monospace;font-size:16px;font-weight:700;letter-spacing:.5px;margin:6px 0;word-break:break-all;}
+.secure-badge{font-size:10.5px;font-weight:700;color:var(--accent);background:rgba(34,224,122,.12);border:1px solid var(--accent);padding:3px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;}
+.pay-tabs{display:flex;gap:8px;margin:10px 0 14px;}
+.pay-tab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-weight:700;font-size:13.5px;cursor:pointer;}
+.pay-tab.sel{background:var(--accent);color:#052b16;border-color:var(--accent);}
+.pay-note{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;margin-top:10px;background:var(--card2);border:1px solid var(--border);padding:8px 10px;border-radius:8px;}
+.plan-status{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:var(--card2);border:1px solid var(--border);color:var(--muted);}
+.plan-status.pro{color:var(--accent);border-color:var(--accent);}
+.plan-status.admin{color:#ffb020;border-color:#ffb020;}
+.admin-bar{position:sticky;top:0;z-index:9;background:linear-gradient(90deg,#3a2a08,#1a2436);border-bottom:1px solid #ffb020;padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:12px;}
+.admin-bar .ab-tag{font-weight:800;color:#ffb020;}
+.admin-bar button{background:rgba(255,176,32,.15);border:1px solid #ffb020;color:#ffb020;padding:5px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;}
+.admin-bar .ab-spacer{flex:1;}
+.admin-bar .ab-info{color:var(--muted);font-size:11px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="logo"><span class="dot"></span>ZapPromo</div>
+    <div class="spacer"></div>
+    <button class="pill-btn" id="topBtn" onclick="handleTopBtn()">Entrar</button>
+  </header>
+
+  <div class="admin-bar" id="adminBar" style="display:none;">
+    <span class="ab-tag">🥷 ADMIN</span>
+    <button onclick="go('admin')">Painel admin</button>
+    <button onclick="go('plans')">Planos</button>
+    <span class="ab-spacer"></span>
+    <span class="ab-info" id="adminBarInfo"></span>
+  </div>
+
+  <main>
+
+    <!-- LANDING -->
+    <section class="screen active" id="screen-landing">
+      <div class="hero">
+        <h1>Divulgue ofertas no <span>WhatsApp e Telegram</span> no piloto automático</h1>
+        <p>Encontre promoções de Mercado Livre, Shopee, Amazon e Magalu, gere a arte e a copy com seu link de afiliado, e publique nos seus grupos com 1 clique.</p>
+        <div class="badge-row">
+          <span class="badge">🛒 Mercado Livre</span>
+          <span class="badge">🛍️ Shopee</span>
+          <span class="badge">📦 Amazon</span>
+          <span class="badge">🏬 Magalu</span>
+        </div>
+        <div class="product-strip">
+          <svg viewBox="0 0 96 96" class="pimg"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2bff9a"/><stop offset="1" stop-color="#0f9c53"/></linearGradient><filter id="sh1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter></defs><rect width="96" height="96" rx="20" fill="#111a29"/><g filter="url(#sh1)"><rect x="22" y="30" width="52" height="36" rx="8" fill="url(#g1)"/><rect x="34" y="20" width="28" height="10" rx="5" fill="#0f9c53"/><circle cx="34" cy="72" r="6" fill="#dbe4f0"/><circle cx="62" cy="72" r="6" fill="#dbe4f0"/></g></svg>
+          <svg viewBox="0 0 96 96" class="pimg"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb35c"/><stop offset="1" stop-color="#e0680f"/></linearGradient><filter id="sh2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter></defs><rect width="96" height="96" rx="20" fill="#111a29"/><g filter="url(#sh2)"><rect x="20" y="26" width="56" height="44" rx="10" fill="url(#g2)"/><circle cx="48" cy="48" r="12" fill="#111a29"/><rect x="40" y="16" width="16" height="12" rx="4" fill="#ffb35c"/></g></svg>
+          <svg viewBox="0 0 96 96" class="pimg"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#e8960f"/></linearGradient><filter id="sh3" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter></defs><rect width="96" height="96" rx="20" fill="#111a29"/><g filter="url(#sh3)"><path d="M26 32h44v36a5 5 0 0 1-5 5H31a5 5 0 0 1-5-5V32z" fill="url(#g3)"/><path d="M32 32l7-14h18l7 14" stroke="#111a29" stroke-width="4" fill="none" stroke-linecap="round"/></g></svg>
+          <svg viewBox="0 0 96 96" class="pimg"><defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fa8ff"/><stop offset="1" stop-color="#1c5fd1"/></linearGradient><filter id="sh4" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/></filter></defs><rect width="96" height="96" rx="20" fill="#111a29"/><g filter="url(#sh4)"><rect x="20" y="24" width="56" height="40" rx="8" fill="url(#g4)"/><rect x="34" y="68" width="28" height="7" rx="3" fill="#dbe4f0"/><circle cx="48" cy="44" r="9" fill="#111a29"/></g></svg>
+        </div>
+        <button class="cta" onclick="go('signup')">Criar conta grátis</button>
+        <div style="height:10px"></div>
+        <button class="cta secondary" onclick="go('login')">Já tenho conta</button>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <svg viewBox="0 0 60 60" class="feat-img"><rect width="60" height="60" rx="12" fill="#1a2436"/><rect x="14" y="16" width="32" height="22" rx="4" fill="#22e07a" opacity=".85"/><rect x="20" y="42" width="20" height="5" rx="2" fill="#22e07a" opacity=".5"/></svg>
+          <h3>Arte automática</h3><p>Gera imagem, preço e desconto prontos para postar.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 60 60" class="feat-img"><rect width="60" height="60" rx="12" fill="#1a2436"/><circle cx="30" cy="30" r="14" fill="none" stroke="#22e07a" stroke-width="4" opacity=".7"/><circle cx="30" cy="30" r="5" fill="#22e07a"/></svg>
+          <h3>Link de afiliado</h3><p>Insere seu link automaticamente em cada oferta.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 60 60" class="feat-img"><rect width="60" height="60" rx="12" fill="#1a2436"/><rect x="14" y="20" width="32" height="8" rx="4" fill="#22e07a" opacity=".85"/><rect x="14" y="32" width="24" height="8" rx="4" fill="#22e07a" opacity=".55"/></svg>
+          <h3>Fila de disparo</h3><p>Agende e publique em vários grupos de uma vez.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 60 60" class="feat-img"><rect width="60" height="60" rx="12" fill="#1a2436"/><rect x="15" y="30" width="7" height="15" fill="#22e07a" opacity=".5"/><rect x="26" y="22" width="7" height="23" fill="#22e07a" opacity=".7"/><rect x="37" y="14" width="7" height="31" fill="#22e07a"/></svg>
+          <h3>Painel em tempo real</h3><p>Acompanhe cliques e ofertas publicadas.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Como funciona</h2>
+        <div class="steps">
+          <div class="step"><div class="n">1</div><div><h4>Crie sua conta grátis</h4><p>Cadastro rápido, sem cartão de crédito.</p></div></div>
+          <div class="step"><div class="n">2</div><div><h4>Conecte seus grupos</h4><p>Adicione os grupos de WhatsApp/Telegram que vai divulgar.</p></div></div>
+          <div class="step"><div class="n">3</div><div><h4>Gere a oferta</h4><p>Cole o link do produto ou escolha um da vitrine e o app monta a arte + copy.</p></div></div>
+          <div class="step"><div class="n">4</div><div><h4>Publique e acompanhe</h4><p>Envie com 1 clique e veja o desempenho no painel.</p></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Planos</h2>
+        <p class="sub">Sem versão grátis — escolha um plano para começar a divulgar.</p>
+        <div class="plan"><div class="ptitle"><span>Básico</span><span class="pprice">R$19,90/mês</span></div><div class="pdesc">Até 5 grupos, 20 ofertas/mês.</div></div>
+        <div class="plan"><div class="ptitle"><span>Plus</span><span class="pprice">R$39,90/mês</span></div><div class="pdesc">Até 15 grupos, 100 ofertas/mês, automação.</div></div>
+        <div class="plan"><div class="ptitle"><span>Pro</span><span class="pprice">R$69,90/mês</span></div><div class="pdesc">Grupos e ofertas ilimitados, automação total.</div></div>
+      </div>
+
+      <div class="footer-note">Pagamento via Pix. Cancele quando quiser.</div>
+    </section>
+
+    <!-- SIGNUP -->
+    <section class="screen" id="screen-signup">
+      <div class="card" style="margin-top:10px;">
+        <h2>Criar conta grátis</h2>
+        <p class="sub">Leva menos de 1 minuto.</p>
+        <label>Nome</label>
+        <input id="su-name" placeholder="Seu nome">
+        <label>E-mail</label>
+        <input id="su-email" placeholder="voce@email.com" type="email">
+        <label>WhatsApp (opcional)</label>
+        <input id="su-phone" placeholder="(11) 99999-9999">
+        <div class="err" id="su-err">Preencha nome e e-mail.</div>
+        <button class="cta" style="margin-top:16px;" onclick="doSignup()">Criar conta</button>
+        <button class="cta secondary" style="margin-top:10px;" onclick="go('landing')">Voltar</button>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section class="screen" id="screen-login">
+      <div class="card" style="margin-top:10px;">
+        <h2>Entrar</h2>
+        <p class="sub">Use o e-mail cadastrado.</p>
+        <label>E-mail</label>
+        <input id="li-email" placeholder="voce@email.com" type="email">
+        <div class="err" id="li-err">E-mail não encontrado. Crie uma conta.</div>
+        <button class="cta" style="margin-top:16px;" onclick="doLogin()">Entrar</button>
+        <button class="cta secondary" style="margin-top:10px;" onclick="go('landing')">Voltar</button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="screen" id="screen-dash">
+      <div class="stats">
+        <div class="stat"><div class="v" id="st-offers">0</div><div class="l">Ofertas criadas</div></div>
+        <div class="stat"><div class="v" id="st-published">0</div><div class="l">Publicadas</div></div>
+        <div class="stat"><div class="v" id="st-groups">0</div><div class="l">Grupos conectados</div></div>
+        <div class="stat"><div class="v" id="st-clicks">0</div><div class="l">Cliques estimados</div></div>
+      </div>
+
+      <div id="dash-lock" class="lock-banner" style="display:none;">
+        <div class="ic">🔒</div>
+        <div><h4>Limite do seu plano atingido</h4><p>Faça upgrade para publicar mais ofertas.</p></div>
+      </div>
+      <button class="cta" onclick="openOfferModal()">➕ Nova oferta</button>
+
+      <div class="section-title">
+        <h3>Suas ofertas</h3>
+        <button class="link-btn" onclick="go('groups')">Gerenciar grupos ▸</button>
+      </div>
+      <div id="offers-list"></div>
+    </section>
+
+    <!-- GROUPS -->
+    <section class="screen" id="screen-groups">
+      <div class="card" style="margin-top:10px;">
+        <h2>Grupos de disparo</h2>
+        <p class="sub">Adicione os grupos de WhatsApp ou Telegram onde as ofertas serão publicadas.</p>
+        <label>Nome do grupo</label>
+        <input id="gr-name" placeholder="Ex: Promoções SP">
+        <label>Plataforma</label>
+        <div class="chip-select">
+          <div class="chip sel" data-val="whatsapp" onclick="selectChip(this,'gr-platform')">WhatsApp</div>
+          <div class="chip" data-val="telegram" onclick="selectChip(this,'gr-platform')">Telegram</div>
+        </div>
+        <input type="hidden" id="gr-platform" value="whatsapp">
+        <button class="cta" style="margin-top:14px;" onclick="addGroup()">Adicionar grupo</button>
+      </div>
+      <div id="groups-list"></div>
+      <button class="cta secondary" onclick="go('dash')">Voltar ao painel</button>
+    </section>
+
+    <!-- AUTOMACAO -->
+    <section class="screen" id="screen-auto">
+      <div id="auto-lock" class="lock-banner" style="display:none;">
+        <div class="ic">🔒</div>
+        <div><h4>Recurso do plano Pro</h4><p>Ative um plano para publicar sozinho, sem clique manual.</p></div>
+      </div>
+      <div id="auto-wrap">
+        <div class="card" style="margin-top:10px;">
+          <h2>Automação de grupos</h2>
+          <p class="sub">Quando ativa, novas ofertas publicadas são reenviadas automaticamente para os grupos selecionados, no intervalo escolhido.</p>
+          <label>Status</label>
+          <div class="chip-select">
+            <div class="chip sel" data-val="on" onclick="selectChip(this,'auto-status')">Ativada</div>
+            <div class="chip" data-val="off" onclick="selectChip(this,'auto-status')">Desativada</div>
+          </div>
+          <input type="hidden" id="auto-status" value="on">
+          <label>Intervalo de repostagem</label>
+          <select id="auto-interval">
+            <option value="1">A cada 1 hora</option>
+            <option value="3" selected>A cada 3 horas</option>
+            <option value="6">A cada 6 horas</option>
+            <option value="24">1 vez por dia</option>
+          </select>
+          <label>Grupos na automação</label>
+          <div class="chip-select" id="auto-groups-chips"></div>
+          <button class="cta" style="margin-top:16px;" onclick="saveAutomation()">Salvar automação</button>
+        </div>
+        <div class="card">
+          <h2>Status atual</h2>
+          <div class="admin-row"><span>Automação</span><b id="auto-cur-status">—</b></div>
+          <div class="admin-row"><span>Intervalo</span><b id="auto-cur-interval">—</b></div>
+          <div class="admin-row"><span>Grupos ativos</span><b id="auto-cur-groups">0</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANOS -->
+    <section class="screen" id="screen-plans">
+      <div class="card" style="margin-top:10px;">
+        <h2>Seu plano <span class="plan-status" id="plan-badge">Nenhum</span></h2>
+        <p class="sub" id="plan-need-msg">Escolha um plano para liberar o painel. Não há versão grátis.</p>
+      </div>
+      <div class="plan" data-plan="basico" onclick="pickPlan(this)">
+        <div class="ptitle"><span>Básico</span><span class="pprice">R$19,90/mês</span></div>
+        <div class="pdesc">Até 5 grupos, 20 ofertas/mês. Publicação manual.</div>
+      </div>
+      <div class="plan" data-plan="plus" onclick="pickPlan(this)">
+        <div class="ptitle"><span>Plus</span><span class="pprice">R$39,90/mês</span></div>
+        <div class="pdesc">Até 15 grupos, 100 ofertas/mês, automação liberada.</div>
+      </div>
+      <div class="plan" data-plan="pro" onclick="pickPlan(this)">
+        <div class="ptitle"><span>Pro</span><span class="pprice">R$69,90/mês</span></div>
+        <div class="pdesc">Grupos e ofertas ilimitados, automação e prioridade.</div>
+      </div>
+      <input type="hidden" id="plan-picked" value="basico">
+
+      <div class="card">
+        <h2>Pagamento <span class="secure-badge">🔒 Ambiente seguro</span></h2>
+        <p class="sub">Escolha como pagar o plano selecionado.</p>
+        <div class="pay-tabs">
+          <button class="pay-tab sel" data-tab="pix" onclick="selectPayTab(this)">Pix</button>
+          <button class="pay-tab" data-tab="card" onclick="selectPayTab(this)">Cartão</button>
+        </div>
+
+        <div id="pay-pix">
+          <div class="pix-box">
+            <div class="small-muted">Chave Pix (CPF)</div>
+            <div class="key">079.464.075-30</div>
+          </div>
+          <p class="small-muted">Pague o valor do plano escolhido e informe o código de ativação recebido.</p>
+        </div>
+
+        <div id="pay-card" style="display:none;">
+          <label>Número do cartão</label>
+          <input id="cc-number" placeholder="0000 0000 0000 0000" inputmode="numeric" maxlength="19" oninput="formatCard(this)">
+          <div class="row2">
+            <div><label>Validade</label><input id="cc-exp" placeholder="MM/AA" maxlength="5" oninput="formatExp(this)"></div>
+            <div><label>CVV</label><input id="cc-cvv" placeholder="123" inputmode="numeric" maxlength="4"></div>
+          </div>
+          <label>Nome no cartão</label>
+          <input id="cc-name" placeholder="Como está no cartão">
+          <div class="pay-note">🔒 Pagamento criptografado. Nenhum dado de cartão é salvo neste protótipo.</div>
+        </div>
+
+        <label style="margin-top:14px;">Código de ativação</label>
+        <input id="activation-code" placeholder="Cole aqui o código recebido">
+        <div class="err" id="activation-err">Código inválido.</div>
+        <button class="cta" style="margin-top:14px;" onclick="activatePlan()">Ativar plano</button>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="screen" id="screen-admin">
+      <div class="card" style="margin-top:10px;">
+        <h2>Painel admin</h2>
+        <p class="sub">Visão geral da plataforma (todos os usuários).</p>
+        <div class="admin-row"><span>Usuários cadastrados</span><b id="ad-users">0</b></div>
+        <div class="admin-row"><span>Ofertas geradas</span><b id="ad-offers">0</b></div>
+        <div class="admin-row"><span>Publicações totais</span><b id="ad-pub">0</b></div>
+        <div class="admin-row"><span>Grupos conectados</span><b id="ad-groups">0</b></div>
+        <div class="admin-row"><span>Assinantes Pro</span><b id="ad-pro">0</b></div>
+      </div>
+      <div class="card">
+        <h2>Usuários recentes</h2>
+        <div id="ad-user-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottom" id="bottomNav">
+    <div class="inner">
+      <button data-s="dash" onclick="go('dash')"><span class="ic">🏠</span>Painel</button>
+      <button data-s="groups" onclick="go('groups')"><span class="ic">👥</span>Grupos</button>
+      <button data-s="auto" onclick="go('auto')"><span class="ic">🤖</span>Automação</button>
+      <button data-s="plans" onclick="go('plans')"><span class="ic">💳</span>Plano</button>
+      <button data-s="admin" onclick="go('admin')" id="navAdminBtn"><span class="ic">⚙️</span>Admin</button>
+    </div>
+  </nav>
+
+  <div class="overlay" id="offerOverlay">
+    <div class="sheet sheet-wrap">
+      <button class="close-x" onclick="closeOfferModal()">✕</button>
+      <div class="sheet-handle"></div>
+      <h3>Nova oferta</h3>
+      <label>Marketplace</label>
+      <div class="chip-select">
+        <div class="chip sel" data-val="Mercado Livre" onclick="selectChip(this,'of-market')">🛒 Mercado Livre</div>
+        <div class="chip" data-val="Shopee" onclick="selectChip(this,'of-market')">🛍️ Shopee</div>
+        <div class="chip" data-val="Amazon" onclick="selectChip(this,'of-market')">📦 Amazon</div>
+        <div class="chip" data-val="Magalu" onclick="selectChip(this,'of-market')">🏬 Magalu</div>
+      </div>
+      <input type="hidden" id="of-market" value="Mercado Livre">
+      <label>Foto real do produto (opcional)</label>
+      <input id="of-photo" type="file" accept="image/*" onchange="handlePhotoUpload(event)">
+      <div class="small-muted" id="of-photo-status" style="margin-top:4px;"></div>
+      <label>Nome do produto</label>
+      <input id="of-name" placeholder="Ex: Fone Bluetooth XYZ" oninput="updatePreview()">
+      <div class="row2">
+        <div><label>Preço atual (R$)</label><input id="of-price" type="number" placeholder="99.90" oninput="updatePreview()"></div>
+        <div><label>Preço antigo (R$)</label><input id="of-oldprice" type="number" placeholder="149.90" oninput="updatePreview()"></div>
+      </div>
+      <label>Link do produto (afiliado)</label>
+      <input id="of-link" placeholder="https://...">
+      <label>Descrição / copy (gerada — edite se quiser)</label>
+      <textarea id="of-desc"></textarea>
+      <div class="preview-card">
+        <div class="pv-img" id="pv-img">🛒</div>
+        <div class="pv-title" id="pv-title">Nome do produto</div>
+        <div><span class="pv-price" id="pv-price">R$ 0,00</span><span class="pv-old" id="pv-old"></span></div>
+        <div class="pv-desc" id="pv-desc"></div>
+      </div>
+      <label>Publicar nos grupos</label>
+      <div class="chip-select" id="of-groups-chips"></div>
+      <div class="err" id="of-err">Preencha nome do produto e preço.</div>
+      <button class="cta" style="margin-top:16px;" onclick="saveOffer(false)">Salvar como rascunho</button>
+      <button class="cta" style="margin-top:10px;background:linear-gradient(135deg,#22e07a,#12b45c);" onclick="saveOffer(true)">🚀 Publicar agora</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- state ---------- */
+let db = null;
+let me = null; // {id,name,email,phone,plan}
+let selectedGroupIds = new Set();
+let offerGroupSelectedIds = new Set();
+
+const $ = id => document.getElementById(id);
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function go(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+screen).classList.add('active');
+  document.querySelectorAll('#bottomNav button').forEach(b=>b.classList.toggle('active', b.dataset.s===screen));
+  const nav = $('bottomNav');
+  if(['dash','groups','admin'].includes(screen) && me){ nav.classList.remove('hidden'); }
+  else { nav.classList.add('hidden'); }
+  if(me && !hasPlan() && ['dash','groups','auto','admin'].includes(screen)){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $('screen-plans').classList.add('active');
+    document.querySelectorAll('#bottomNav button').forEach(b=>b.classList.toggle('active', b.dataset.s==='plans'));
+    renderPlans();
+    toast('Escolha um plano para continuar.');
+    return;
+  }
+  if(screen==='dash') renderOffers();
+  if(screen==='groups') renderGroups();
+  if(screen==='auto') renderAutomation();
+  if(screen==='plans') renderPlans();
+  if(screen==='admin') renderAdmin();
+  window.scrollTo(0,0);
+}
+
+const ADMIN_CODE = 'NINJA-ADMIN-7530';
+const PLAN_LIMITS = {
+  basico: {groups:5, offers:20, automation:false, label:'Básico'},
+  plus:   {groups:15, offers:100, automation:true, label:'Plus'},
+  pro:    {groups:Infinity, offers:Infinity, automation:true, label:'Pro'}
+};
+function isAdmin(){ return !!me && me.isAdmin; }
+function hasPlan(){ return !!me && (isAdmin() || !!me.plan); }
+function isPro(){ return hasPlan() && (isAdmin() || PLAN_LIMITS[me.plan].automation); } // "pro-level" = automation allowed
+function currentLimits(){ return isAdmin() ? PLAN_LIMITS.pro : (me && me.plan ? PLAN_LIMITS[me.plan] : {groups:0, offers:0, automation:false, label:'Nenhum'}); }
+
+function applyGates(){
+  if(!$('navAdminBtn')) return;
+  $('navAdminBtn').style.display = isAdmin() ? '' : 'none';
+  const bar = $('adminBar');
+  if(bar){
+    bar.style.display = isAdmin() ? 'flex' : 'none';
+    if(isAdmin()) $('adminBarInfo').textContent = me.name || '';
+  }
+  const badge = $('plan-badge');
+  if(badge){
+    const lim = currentLimits();
+    badge.textContent = isAdmin() ? 'Admin' : (me && me.plan ? lim.label : 'Nenhum');
+    badge.className = 'plan-status ' + (isAdmin() ? 'admin' : (me && me.plan ? 'pro' : ''));
+  }
+  const msg = $('plan-need-msg');
+  if(msg){
+    msg.textContent = hasPlan() ? 'Você pode trocar de plano quando quiser.' : 'Escolha um plano para liberar o painel. Não há versão grátis.';
+  }
+}
+
+function pickPlan(el){
+  document.querySelectorAll('#screen-plans .plan').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  $('plan-picked').value = el.dataset.plan;
+}
+
+function selectPayTab(el){
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');
+  const tab = el.dataset.tab;
+  $('pay-pix').style.display = tab==='pix' ? 'block' : 'none';
+  $('pay-card').style.display = tab==='card' ? 'block' : 'none';
+}
+function formatCard(el){
+  el.value = el.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExp(el){
+  let v = el.value.replace(/\D/g,'').slice(0,4);
+  if(v.length>=3) v = v.slice(0,2)+'/'+v.slice(2);
+  el.value = v;
+}
+
+async function activatePlan(){
+  const code = $('activation-code').value.trim();
+  const chosen = $('plan-picked').value;
+  if(!code){ $('activation-err').textContent='Informe o código de ativação.'; $('activation-err').style.display='block'; return; }
+  $('activation-err').style.display='none';
+  let update = {};
+  if(code === ADMIN_CODE){
+    update = {isAdmin:true, plan:'pro'};
+    toast('🥷 Acesso admin liberado!');
+  } else if(code.length >= 6){
+    update = {plan: chosen};
+    toast('✅ Plano ' + PLAN_LIMITS[chosen].label + ' ativado!');
+  } else {
+    $('activation-err').textContent = 'Código inválido.';
+    $('activation-err').style.display='block';
+    return;
+  }
+  Object.assign(me, update);
+  if(db){ try{ await db.collection('users').update(me.id, update); }catch(e){} }
+  $('activation-code').value='';
+  applyGates();
+  renderPlans();
+}
+
+function renderPlans(){ applyGates(); }
+
+async function renderAutomation(){
+  applyGates();
+  const lock = $('auto-lock'), wrap = $('auto-wrap');
+  if(!isPro()){
+    lock.style.display='flex';
+    wrap.classList.add('disabled-wrap');
+  } else {
+    lock.style.display='none';
+    wrap.classList.remove('disabled-wrap');
+  }
+  const groups = await fetchMyGroups();
+  const cfg = (me && me.automation) || {status:'on', interval:'3', groupIds:groups.map(g=>g.id)};
+  $('auto-groups-chips').innerHTML = groups.length ? groups.map(g=>`
+    <div class="chip ${cfg.groupIds && cfg.groupIds.includes(g.id)?'sel':''}" data-gid="${g.id}" onclick="this.classList.toggle('sel')">${esc(g.data.name)}</div>
+  `).join('') : '<span class="small-muted">Cadastre grupos primeiro.</span>';
+  document.querySelectorAll('[onclick*="auto-status"]').forEach(c=>c.classList.toggle('sel', c.dataset.val===cfg.status));
+  $('auto-interval').value = cfg.interval || '3';
+  $('auto-cur-status').textContent = cfg.status==='on' ? 'Ativada ✅' : 'Desativada';
+  $('auto-cur-interval').textContent = (cfg.interval||'3') + 'h';
+  $('auto-cur-groups').textContent = (cfg.groupIds||[]).length;
+}
+
+async function saveAutomation(){
+  if(!isPro()){ toast('Ative o plano Pro para usar a automação.'); go('plans'); return; }
+  const status = $('auto-status').value;
+  const interval = $('auto-interval').value;
+  const groupIds = Array.from(document.querySelectorAll('#auto-groups-chips .chip.sel')).map(c=>c.dataset.gid);
+  const automation = {status, interval, groupIds};
+  me.automation = automation;
+  if(db){ try{ await db.collection('users').update(me.id, {automation}); }catch(e){} }
+  toast('Automação salva!');
+  renderAutomation();
+}
+
+function handleTopBtn(){
+  if(me){ logout(); } else { go('login'); }
+}
+
+function selectChip(el, hiddenId){
+  el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  $(hiddenId).value = el.dataset.val;
+  if(hiddenId==='of-market') updatePreview();
+}
+
+/* ---------- persistence ---------- */
+async function initDb(){
+  try{ db = await claude.use('db'); }catch(e){ db = null; }
+}
+
+function uid(){ return 'u_' + Math.random().toString(36).slice(2,10); }
+function oid(){ return 'o_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function gid(){ return 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+async function doSignup(){
+  const name = $('su-name').value.trim();
+  const email = $('su-email').value.trim().toLowerCase();
+  const phone = $('su-phone').value.trim();
+  if(!name || !email){ $('su-err').style.display='block'; return; }
+  $('su-err').style.display='none';
+
+  let existing = null;
+  if(db){
+    try{
+      const res = await db.collection('users').query({where:[['email','eq',email]], limit:1});
+      if(res && res.docs && res.docs.length) existing = res.docs[0];
+    }catch(e){}
+  }
+  if(existing){
+    me = {id: existing.id, ...existing.data};
+  } else {
+    const id = uid();
+    const data = {name, email, phone, plan:null, createdAt: Date.now()};
+    me = {id, ...data};
+    if(db){ try{ await db.collection('users').set(id, data); }catch(e){} }
+  }
+  try{ localStorage.setItem('zp_email', email); }catch(e){}
+  afterLogin();
+}
+
+async function doLogin(){
+  const email = $('li-email').value.trim().toLowerCase();
+  if(!email){ $('li-err').style.display='block'; return; }
+  let existing = null;
+  if(db){
+    try{
+      const res = await db.collection('users').query({where:[['email','eq',email]], limit:1});
+      if(res && res.docs && res.docs.length) existing = res.docs[0];
+    }catch(e){}
+  }
+  if(!existing){ $('li-err').style.display='block'; return; }
+  $('li-err').style.display='none';
+  me = {id: existing.id, ...existing.data};
+  try{ localStorage.setItem('zp_email', email); }catch(e){}
+  afterLogin();
+}
+
+function logout(){
+  me = null;
+  try{ localStorage.removeItem('zp_email'); }catch(e){}
+  $('topBtn').textContent = 'Entrar';
+  go('landing');
+}
+
+async function afterLogin(){
+  $('topBtn').textContent = 'Sair';
+  applyGates();
+  go(hasPlan() ? 'dash' : 'plans');
+  toast('Bem-vindo, ' + (me.name||'').split(' ')[0] + '!');
+}
+
+async function tryAutoLogin(){
+  let email = null;
+  try{ email = localStorage.getItem('zp_email'); }catch(e){}
+  if(!email) return;
+  if(db){
+    try{
+      const res = await db.collection('users').query({where:[['email','eq',email]], limit:1});
+      if(res && res.docs && res.docs.length){
+        me = {id: res.docs[0].id, ...res.docs[0].data};
+        $('topBtn').textContent = 'Sair';
+        applyGates();
+        go('dash');
+      }
+    }catch(e){}
+  }
+}
+
+/* ---------- groups ---------- */
+async function addGroup(){
+  const name = $('gr-name').value.trim();
+  const platform = $('gr-platform').value;
+  if(!name || !me) return;
+  const lim = currentLimits();
+  const existingG = await fetchMyGroups();
+  if(existingG.length >= lim.groups){ toast('Limite de grupos do plano ' + lim.label + ' atingido.'); go('plans'); return; }
+  const id = gid();
+  const data = {ownerId: me.id, name, platform, createdAt: Date.now()};
+  if(db){ try{ await db.collection('groups').set(id, data); }catch(e){} }
+  $('gr-name').value='';
+  toast('Grupo adicionado!');
+  renderGroups();
+}
+
+async function fetchMyGroups(){
+  if(!db || !me) return [];
+  try{
+    const res = await db.collection('groups').query({where:[['ownerId','eq',me.id]], orderBy:{field:'createdAt', direction:'desc'}, limit:100});
+    return (res && res.docs) ? res.docs : [];
+  }catch(e){ return []; }
+}
+
+async function renderGroups(){
+  const list = $('groups-list');
+  const groups = await fetchMyGroups();
+  $('st-groups').textContent = groups.length;
+  if(!groups.length){ list.innerHTML = '<div class="empty"><div class="ic">👥</div>Nenhum grupo ainda. Adicione um acima.</div>'; return; }
+  list.innerHTML = groups.map(g=>`
+    <div class="offer">
+      <div class="thumb">${g.data.platform==='telegram'?'✈️':'💬'}</div>
+      <div class="info">
+        <h4>${esc(g.data.name)}</h4>
+        <div class="meta"><span class="tag">${g.data.platform==='telegram'?'Telegram':'WhatsApp'}</span></div>
+      </div>
+      <div class="actions">
+        <button class="icon-btn danger" onclick="deleteGroup('${g.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function deleteGroup(id){
+  if(db){ try{ await db.collection('groups').delete(id); }catch(e){} }
+  renderGroups();
+}
+
+/* ---------- offers ---------- */
+const marketIcons = {'Mercado Livre':'🛒','Shopee':'🛍️','Amazon':'📦','Magalu':'🏬'};
+let assetsCap = null;
+let currentOfferPhoto = null; // {id,url}
+
+async function handlePhotoUpload(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  $('of-photo-status').textContent = 'Enviando foto...';
+  try{
+    if(!assetsCap){ assetsCap = await claude.use('assets'); }
+    if(!assetsCap){ $('of-photo-status').textContent = 'Upload de imagem indisponível aqui.'; return; }
+    const res = await assetsCap.upload(file);
+    currentOfferPhoto = {id: res.id, url: res.url};
+    $('of-photo-status').textContent = '✅ Foto anexada.';
+    $('pv-img').innerHTML = `<img src="${res.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+  }catch(e){
+    $('of-photo-status').textContent = 'Falha ao enviar a foto.';
+  }
+}
+
+function genCopy(name, market, price, old){
+  const p = price ? 'R$ '+Number(price).toFixed(2).replace('.',',') : '';
+  const o = old ? 'de R$ '+Number(old).toFixed(2).replace('.',',')+' por ' : '';
+  const disc = (old && price && Number(old)>Number(price)) ? Math.round((1-Number(price)/Number(old))*100) : null;
+  let txt = `🔥 OFERTA ${market.toUpperCase()}!\n\n${name||'[produto]'}\n\n${o}${p}`;
+  if(disc) txt += ` (${disc}% OFF)`;
+  txt += `\n\n👉 Corre que acaba rápido!\n🔗 [link do produto]`;
+  return txt;
+}
+
+function updatePreview(){
+  const name = $('of-name').value.trim();
+  const market = $('of-market').value;
+  const price = $('of-price').value;
+  const old = $('of-oldprice').value;
+  $('pv-img').textContent = marketIcons[market] || '🛒';
+  $('pv-title').textContent = name || 'Nome do produto';
+  $('pv-price').textContent = price ? 'R$ '+Number(price).toFixed(2).replace('.',',') : 'R$ 0,00';
+  $('pv-old').textContent = old ? 'R$ '+Number(old).toFixed(2).replace('.',',') : '';
+  const auto = genCopy(name, market, price, old);
+  if(!$('of-desc')._dirty){ $('of-desc').value = auto; }
+  $('pv-desc').textContent = $('of-desc').value;
+}
+
+async function openOfferModal(){
+  if(!me){ go('login'); return; }
+  const offers = await fetchMyOffers();
+  if(offers.length >= currentLimits().offers){ toast('Limite de ofertas do plano ' + currentLimits().label + ' atingido.'); go('plans'); return; }
+  $('of-name').value=''; $('of-price').value=''; $('of-oldprice').value=''; $('of-link').value='';
+  $('of-desc').value=''; $('of-desc')._dirty=false;
+  $('of-photo').value=''; $('of-photo-status').textContent=''; currentOfferPhoto=null;
+  $('of-desc').oninput = ()=>{ $('of-desc')._dirty=true; $('pv-desc').textContent=$('of-desc').value; };
+  document.querySelectorAll('#offerOverlay .chip-select .chip').forEach(c=>{
+    if(c.parentElement.previousElementSibling && c.parentElement.previousElementSibling.textContent.includes('Marketplace')){}
+  });
+  $('of-market').value='Mercado Livre';
+  document.querySelectorAll('[onclick*="of-market"]').forEach((c,i)=>c.classList.toggle('sel', i===0));
+  updatePreview();
+  const groups = await fetchMyGroups();
+  offerGroupSelectedIds = new Set(groups.map(g=>g.id));
+  $('of-groups-chips').innerHTML = groups.length ? groups.map(g=>`
+    <div class="chip sel" data-gid="${g.id}" onclick="toggleOfferGroup(this)">${esc(g.data.name)}</div>
+  `).join('') : '<span class="small-muted">Nenhum grupo cadastrado — adicione em "Grupos".</span>';
+  $('of-err').style.display='none';
+  $('offerOverlay').classList.add('show');
+}
+function closeOfferModal(){ $('offerOverlay').classList.remove('show'); }
+
+function toggleOfferGroup(el){
+  const id = el.dataset.gid;
+  if(offerGroupSelectedIds.has(id)){ offerGroupSelectedIds.delete(id); el.classList.remove('sel'); }
+  else { offerGroupSelectedIds.add(id); el.classList.add('sel'); }
+}
+
+async function saveOffer(publish){
+  const name = $('of-name').value.trim();
+  const price = $('of-price').value;
+  if(!name || !price){ $('of-err').style.display='block'; return; }
+  $('of-err').style.display='none';
+  const id = oid();
+  const data = {
+    ownerId: me.id,
+    market: $('of-market').value,
+    name, price: Number(price), oldPrice: $('of-oldprice').value ? Number($('of-oldprice').value) : null,
+    link: $('of-link').value.trim(),
+    desc: $('of-desc').value,
+    photoUrl: currentOfferPhoto ? currentOfferPhoto.url : null,
+    photoId: currentOfferPhoto ? currentOfferPhoto.id : null,
+    status: publish ? 'published' : 'draft',
+    groupIds: Array.from(offerGroupSelectedIds),
+    clicks: publish ? Math.floor(Math.random()*40)+5 : 0,
+    createdAt: Date.now()
+  };
+  if(db){ try{ await db.collection('offers').set(id, data); }catch(e){} }
+  closeOfferModal();
+  toast(publish ? '🚀 Publicada nos grupos selecionados!' : 'Rascunho salvo.');
+  go('dash');
+}
+
+async function fetchMyOffers(){
+  if(!db || !me) return [];
+  try{
+    const res = await db.collection('offers').query({where:[['ownerId','eq',me.id]], orderBy:{field:'createdAt', direction:'desc'}, limit:100});
+    return (res && res.docs) ? res.docs : [];
+  }catch(e){ return []; }
+}
+
+async function renderOffers(){
+  applyGates();
+  const list = $('offers-list');
+  const offers = await fetchMyOffers();
+  const groups = await fetchMyGroups();
+  const lock = $('dash-lock');
+  if(offers.length >= currentLimits().offers){ lock.style.display='flex'; } else { lock.style.display='none'; }
+  $('st-offers').textContent = offers.length;
+  $('st-published').textContent = offers.filter(o=>o.data.status==='published').length;
+  $('st-groups').textContent = groups.length;
+  $('st-clicks').textContent = offers.reduce((s,o)=>s+(o.data.clicks||0),0);
+
+  if(!offers.length){ list.innerHTML = '<div class="empty"><div class="ic">🛍️</div>Nenhuma oferta ainda.<br>Toque em "Nova oferta" para começar.</div>'; return; }
+
+  list.innerHTML = offers.map(o=>{
+    const d = o.data;
+    const discount = (d.oldPrice && d.oldPrice>d.price) ? Math.round((1-d.price/d.oldPrice)*100) : null;
+    return `
+    <div class="offer">
+      <div class="thumb">${d.photoUrl ? `<img src="${d.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : (marketIcons[d.market]||'🛒')}</div>
+      <div class="info">
+        <h4>${esc(d.name)}</h4>
+        <span class="price">R$ ${d.price.toFixed(2).replace('.',',')}</span>${d.oldPrice?`<span class="old">R$ ${d.oldPrice.toFixed(2).replace('.',',')}</span>`:''}
+        <div class="meta">
+          <span class="tag">${esc(d.market)}</span>
+          <span class="tag ${d.status==='published'?'live':''}">${d.status==='published'?'Publicada':'Rascunho'}</span>
+          ${discount?`<span class="tag">${discount}% OFF</span>`:''}
+        </div>
+      </div>
+      <div class="actions">
+        ${d.status!=='published'?`<button class="icon-btn" onclick="publishOffer('${o.id}')">🚀</button>`:''}
+        <button class="icon-btn danger" onclick="deleteOffer('${o.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function publishOffer(id){
+  if(db){ try{ await db.collection('offers').update(id, {status:'published', clicks: Math.floor(Math.random()*40)+5}); }catch(e){} }
+  toast('🚀 Publicada!');
+  renderOffers();
+}
+async function deleteOffer(id){
+  if(db){ try{ await db.collection('offers').delete(id); }catch(e){} }
+  renderOffers();
+}
+
+/* ---------- admin ---------- */
+async function renderAdmin(){
+  if(!db){ return; }
+  try{
+    const users = await db.collection('users').query({limit:1000});
+    const offers = await db.collection('offers').query({limit:1000});
+    const groups = await db.collection('groups').query({limit:1000});
+    const u = users.docs||[], o = offers.docs||[], g = groups.docs||[];
+    $('ad-users').textContent = u.length;
+    $('ad-offers').textContent = o.length;
+    $('ad-pub').textContent = o.filter(x=>x.data.status==='published').length;
+    $('ad-groups').textContent = g.length;
+    $('ad-pro').textContent = u.filter(x=>x.data.plan==='pro').length;
+    $('ad-user-list').innerHTML = u.slice(0,15).map(x=>`
+      <div class="admin-row"><span>${esc(x.data.name||'—')}</span><span class="small-muted">${esc(x.data.email||'')}</span></div>
+    `).join('') || '<div class="empty">Sem usuários ainda.</div>';
+  }catch(e){
+    $('ad-user-list').innerHTML = '<div class="empty">Dados indisponíveis.</div>';
+  }
+}
+
+function esc(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- boot ---------- */
+(async function(){
+  await initDb();
+  await tryAutoLogin();
+})();
+</script>
+</body>
+</html>
